@@ -1,16 +1,5 @@
 streamlit
 pandas
-openpyxl
-streamlit-folium
-streamlit-autorefresh
-streamlit
-pandas
-folium
-streamlit-folium
-plotly
-gspread .
-streamlit
-pandas
 gspread
 oauth2client
 plotly
