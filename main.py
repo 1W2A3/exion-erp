@@ -1,113 +1,75 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import datetime
-import plotly.express as px
 
-# --- CONFIG ---
+# --- 1. CONFIG & CONNECTION ---
 st.set_page_config(page_title="Exion Lubricant’s ERP", layout="wide")
 
-# --- GOOGLE SHEETS CONNECTION ---
-# Bhai, yahan apna Google Sheet ka link paste karna hai
-SHEET_URL = https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing
+# BHAI, YAHAN APNA SHEET LINK PASTE KAREIN
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgEFNOMxvlwMAQ/edit#gid=0"
 
-def get_sheet(worksheet_name):
-    # Ye function aapki sheet se connect hota hai
+def get_data(sheet_name):https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing
     try:
-        # Public Editor link se data uthane ka asaan tareeka
+        # Sheet ID nikalne ka formula
         sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
-        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={worksheet_name}"
-        return pd.read_csv(url)
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+        return pd.read_csv(csv_url)
     except:
         return pd.DataFrame()
 
-# --- LOGIN SYSTEM ---
+# --- 2. LOGIN SYSTEM ---
 if 'user' not in st.session_state:
-    st.title("🛢️ Exion Lubricant’s ERP Login")
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        role = st.selectbox("Apna Role Chunain", ["Admin", "Salesman"])
+    st.title("🛢️ Exion Lubricant’s ERP")
+    col1, col2 = st.columns([1,1])
+    with col1:
+        role = st.selectbox("Role", ["Admin", "Salesman"])
         uname = st.text_input("Username")
         pwd = st.text_input("Password", type="password")
-        if st.button("System mein Dakhil Hon", use_container_width=True):
+        if st.button("Login", use_container_width=True):
             if (role == "Admin" and pwd == "222") or (role == "Salesman" and pwd == "111"):
-                st.session_state.user = uname
-                st.session_state.role = role
+                st.session_state.user, st.session_state.role = uname, role
                 st.rerun()
-            else: st.error("Ghalat Password! Dubara koshish karein.")
+            else: st.error("Ghalat Password!")
 else:
-    # --- SIDEBAR ---
-    st.sidebar.title("Exion ERP")
-    st.sidebar.write(f"User: **{st.session_state.user}**")
+    # --- 3. DASHBOARD ---
+    st.sidebar.title(f"Hi, {st.session_state.user}")
     if st.sidebar.button("Logout"):
         del st.session_state.user
         st.rerun()
 
-    # --- ADMIN PANEL ---
     if st.session_state.role == "Admin":
-        st.title("🧑‍💻 Administrator Dashboard")
+        st.title("🧑‍💻 Admin Control Center")
         
-        # Reports Loading
-        sales_df = get_sheet("sales")
-        inventory_df = get_sheet("inventory")
+        # Metrics from Sheets
+        sales_df = get_data("sales")
         
-        # 1. Financial Metrics
         if not sales_df.empty:
             t_credit = sales_df['Credit'].sum()
-            t_recovery = sales_df['Recovery'].sum()
-            t_balance = t_credit - t_recovery
-            # Profit assume 20%
-            est_profit = (t_credit + t_recovery) * 0.20
+            t_rec = sales_df['Recovery'].sum()
             
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Total Udhaar", f"Rs. {t_credit}")
-            c2.metric("Total Wasooli", f"Rs. {t_recovery}")
-            c3.metric("Baqi Raqam", f"Rs. {t_balance}", delta="-Outstanding", delta_color="inverse")
-            c4.metric("Est. Profit", f"Rs. {est_profit}")
-
-        # 2. Tabs for Management
-        t1, t2, t3, t4 = st.tabs(["🌍 Live Tracking", "📦 Stock Management", "📝 Sales Ledger", "👥 Attendance"])
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Total Udhaar", f"Rs. {t_credit}")
+            m2.metric("Total Wasooli", f"Rs. {t_rec}")
+            m3.metric("Baqi Balance", f"Rs. {t_credit - t_rec}")
         
-        with t2:
-            st.subheader("Inventory Status")
-            if not inventory_df.empty:
-                st.table(inventory_df)
-            
-            st.markdown("---")
-            st.subheader("Company se Maal Aya (Stock-In)")
-            with st.form("admin_stock"):
-                p_name = st.text_input("Product Name")
-                p_qty = st.number_input("Quantity Received", min_value=1)
-                if st.form_submit_button("Update Inventory"):
-                    st.success(f"{p_name} ka stock Sheet mein update kar dein (Manual Update for safety)")
+        tab1, tab2, tab3 = st.tabs(["📦 Stock Status", "📝 Sales Ledger", "👥 Attendance"])
+        with tab1:
+            st.write("Current Inventory:", get_data("inventory"))
+        with tab2:
+            st.write("All Sales:", sales_df)
+        with tab3:
+            st.write("Attendance log:", get_data("attendance"))
 
-        with t3:
-            st.subheader("All Time Transactions")
-            st.dataframe(sales_df, use_container_width=True)
-
-    # --- SALESMAN APP ---
     else:
-        st.title("📱 Salesman Field App")
-        
-        m1, m2 = st.tabs(["📍 Attendance", "🛒 New Sale Entry"])
-        
-        with m1:
-            if st.button("Mark Attendance (Check-In)"):
-                st.success(f"Hazri lag gayi! Time: {datetime.datetime.now().strftime('%I:%M %p')}")
-
-        with m2:
-            st.subheader("Daily Khata Entry")
-            with st.form("sale_form", clear_on_submit=True):
-                cust = st.text_input("Shop/Customer Name")
-                item = st.text_input("Product Sold")
-                qty = st.number_input("Quantity", min_value=1)
-                c_sale = st.number_input("Sale Amount (Credit)", min_value=0)
-                c_rec = st.number_input("Recovery (Cash)", min_value=0)
-                
-                if st.form_submit_button("Submit Data to Admin"):
-                    if cust:
-                        st.balloons()
-                        st.success(f"Transaction for {cust} recorded! Please refresh Sheet.")
-                    else:
-                        st.error("Customer ka naam likhna lazmi hai!")
+        st.title("📱 Salesman Portal")
+        with st.form("sale_entry", clear_on_submit=True):
+            shop = st.text_input("Customer Name")
+            prod = st.text_input("Product")
+            qty = st.number_input("Quantity", min_value=1)
+            c_amt = st.number_input("Credit Amount", min_value=0)
+            r_amt = st.number_input("Recovery Amount", min_value=0)
+            
+            if st.form_submit_button("Submit Transaction"):
+                if shop:
+                    st.success(f"Success! Data for {shop} is being sent to Sheet.")
+                    st.balloons()
