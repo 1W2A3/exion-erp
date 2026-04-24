@@ -119,3 +119,48 @@ if st.sidebar.button("Hazri Lagayein"):
         st.info(f"Record: {s_name} - Present at {waqt}")
     else:
         st.sidebar.error("Meherbani karke pehle naam likhein!")
+        import streamlit as st
+import pandas as pd
+import datetime
+from streamlit_folium import folium_static
+import folium
+
+# Page Setup
+st.set_page_config(page_title="Exion ERP - Kotli", layout="wide")
+
+# --- LOGIN SYSTEM ---
+st.sidebar.title("🔐 Login System")
+user_role = st.sidebar.selectbox("Apna Role Chunein:", ["Salesman", "Admin"])
+
+# 1. SALESMAN PORTAL
+if user_role == "Salesman":
+    st.title("📱 Salesman Portal")
+    st.subheader("Hazri aur Sale Record")
+    
+    s_name = st.text_input("Salesman ka Naam:", value="Janice", disabled=True) # Agar aik hi hai to fix kar dein
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📍 Hazri Lagayein"):
+            waqt = datetime.datetime.now().strftime("%I:%M %p")
+            st.success(f"Hazri lag gayi! Waqt: {waqt}")
+    
+    with col2:
+        st.button("📦 Sale Record Karein")
+
+# 2. ADMIN DASHBOARD
+else:
+    password = st.sidebar.text_input("Admin Password Dalein:", type="password")
+    
+    if password == "kotli786": # Aap ye password apni marzi se badal sakte hain
+        st.title("👨‍💼 Admin Dashboard (Kotli Control)")
+        
+        # Yahan aapka Kotli Map wala purana code aaye ga
+        st.subheader("🌍 Live Fleet Tracking - Kotli, AK")
+        m = folium.Map(location=[33.5158, 73.9018], zoom_start=14)
+        folium.Marker([33.5158, 73.9018], popup="Main Office").add_to(m)
+        folium_static(m)
+        
+        st.sidebar.success("Welcome back, Admin!")
+    else:
+        st.info("Pehle sahi password dalein taakay aap map aur inventory dekh sakein.")
