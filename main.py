@@ -8,7 +8,7 @@ st.set_page_config(page_title="Exion Lubricant’s ERP", layout="wide")
 # BHAI, IS LINE KO AB NAHI CHERNA, YE BILKUL SAHI HAI
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvlwMAQ/edit?usp=sharing"
 
-def get_data(sheet_name):https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing
+def get_data(sheet_name):"https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing"
     try:
         # Sheet ID nikalne ka sahi tariqa
         sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
