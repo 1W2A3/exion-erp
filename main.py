@@ -8,7 +8,7 @@ st.set_page_config(page_title="Exion Lubricant’s ERP", layout="wide")
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing"
 
 def get_data(sheet_name):
-    try:    "https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing"
+    try:  
         # Ye lines 'try:' se thori aage honi chahiye
         sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
