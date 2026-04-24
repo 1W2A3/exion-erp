@@ -8,4 +8,9 @@ pandas
 folium
 streamlit-folium
 plotly
-gspread aur oauth2client.
+gspread .
+streamlit
+pandas
+gspread
+oauth2client
+plotly
