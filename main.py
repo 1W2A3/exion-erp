@@ -5,12 +5,11 @@ import datetime
 # --- 1. CONFIG & CONNECTION ---
 st.set_page_config(page_title="Exion Lubricant’s ERP", layout="wide")
 
-# BHAI, YAHAN APNA SHEET LINK PASTE KAREIN
+# BHAI, YAHAN LINK BILKUL SAHI HAI AB
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgEFNOMxvlwMAQ/edit#gid=0"
 
 def get_data(sheet_name):https://docs.google.com/spreadsheets/d/1OfNYugaCuq0728jfW2LD_3xaFvFgMgfEFNOMxvIwMAQ/edit?usp=sharing
     try:
-        # Sheet ID nikalne ka formula
         sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
         return pd.read_csv(csv_url)
@@ -39,13 +38,13 @@ else:
 
     if st.session_state.role == "Admin":
         st.title("🧑‍💻 Admin Control Center")
-        
-        # Metrics from Sheets
         sales_df = get_data("sales")
         
         if not sales_df.empty:
-            t_credit = sales_df['Credit'].sum()
-            t_rec = sales_df['Recovery'].sum()
+            # Column names ko saaf karna (agar extra space ho)
+            sales_df.columns = sales_df.columns.str.strip()
+            t_credit = pd.to_numeric(sales_df['Credit'], errors='coerce').sum()
+            t_rec = pd.to_numeric(sales_df['Recovery'], errors='coerce').sum()
             
             m1, m2, m3 = st.columns(3)
             m1.metric("Total Udhaar", f"Rs. {t_credit}")
@@ -62,6 +61,10 @@ else:
 
     else:
         st.title("📱 Salesman Portal")
+        with st.expander("📍 Mark Attendance", expanded=True):
+            if st.button("Hazri Lagayein"):
+                st.success("Attendance marked (Simulated)")
+
         with st.form("sale_entry", clear_on_submit=True):
             shop = st.text_input("Customer Name")
             prod = st.text_input("Product")
@@ -71,5 +74,5 @@ else:
             
             if st.form_submit_button("Submit Transaction"):
                 if shop:
-                    st.success(f"Success! Data for {shop} is being sent to Sheet.")
+                    st.success(f"Transaction for {shop} recorded!")
                     st.balloons()
