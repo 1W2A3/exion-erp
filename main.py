@@ -122,3 +122,16 @@ else:
                     st.success(f"Data for {s_name} sent successfully!")
                 else:
                     st.error("Shop Name is required!")
+elif st.session_state.role == "Salesman":
+        st.title("📱 Field Sales Application")
+        
+        # --- NAYI CHEEZ: ATTENDANCE ---
+        with st.expander("📍 Aaj ki Attendance Lagayein", expanded=True):
+            if st.button("Mark Attendance Now"):
+                now = datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
+                if 'attendance_records' not in st.session_state:
+                    st.session_state.attendance_records = []
+                st.session_state.attendance_records.append({"User": "Salesman", "Time": now})
+                st.success(f"Hazri lag gayi! Time: {now}")
+        
+        # Baqi purana sales entry form iske neechay chalta rahay ga...
