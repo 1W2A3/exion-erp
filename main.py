@@ -98,3 +98,24 @@ elif choice == "🛰️ Salesman Tracking":
     folium_static(m)
     st.write("### 📜 Location Logs")
     st.dataframe(loc_df.tail(10), use_container_width=True)
+    # --- SALESMAN ATTENDANCE SECTION ---
+st.sidebar.markdown("---")  # Aik line lagaye ga design ko alag karne ke liye
+st.sidebar.subheader("📍 Salesman Attendance")
+
+# Naam likhne ki jagah
+s_name = st.sidebar.text_input("Salesman ka Naam:", placeholder="Apna naam likhein...")
+
+# Hazri lagane ka button
+if st.sidebar.button("Hazri Lagayein"):
+    if s_name:
+        # Time aur Date set karna
+        import datetime
+        waqt = datetime.datetime.now().strftime("%I:%M %p (%d-%b)")
+        
+        # Screen par confirmation
+        st.sidebar.success(f"Shukriya {s_name}! Aapki hazri {waqt} par lag gayi hai.")
+        
+        # Aik chota sa table dikhayega attendance ka
+        st.info(f"Record: {s_name} - Present at {waqt}")
+    else:
+        st.sidebar.error("Meherbani karke pehle naam likhein!")
