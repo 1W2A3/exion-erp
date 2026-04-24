@@ -4,20 +4,11 @@ import datetime
 from streamlit_folium import folium_static
 import folium
 
-# Professional Page Setup
 st.set_page_config(page_title="Exion ERP | Distribution", layout="wide")
 
-# Theme Styling
-st.markdown("""<style>
-    .main { background-color: #f0f2f6; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    </style>""", unsafe_allow_html=True)
-
-# Fake Database (Temporary - Refresh par ud jayega)
-if 'sales_record' not in st.session_state: st.session_state.sales_record = []
-if 'attendance_log' not in st.session_state: st.session_state.attendance_log = []
-if 'inventory_db' not in st.session_state: 
-    st.session_state.inventory_db = [{"Item": "Sample Product", "Stock": 100}]
+# Persistent Data Setup
+if 'sales_ledger' not in st.session_state: st.session_state.sales_ledger = []
+if 'inventory' not in st.session_state: st.session_state.inventory = {"Product A": 100, "Product B": 50}
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -25,20 +16,18 @@ if 'logged_in' not in st.session_state:
 # --- LOGIN ---
 if not st.session_state.logged_in:
     st.title("🛡️ Exion Distribution Portal")
-    col1, col2 = st.columns([1,1])
-    with col1:
-        role = st.selectbox("Select Role", ["Admin", "Salesman"])
-        pwd = st.text_input("Password", type="password")
-        if st.button("Login"):  # Aapki demand par 'Login' likh diya hai
-            if role == "Admin" and pwd == "222":
-                st.session_state.logged_in, st.session_state.role = True, "Admin"
-                st.rerun()
-            elif role == "Salesman" and pwd == "111":
-                st.session_state.logged_in, st.session_state.role = True, "Salesman"
-                st.rerun()
-            else: st.error("Wrong Password")
+    role = st.selectbox("Select User Role", ["Admin", "Salesman"])
+    pwd = st.text_input("Enter Password", type="password")
+    if st.button("Login"):
+        if role == "Admin" and pwd == "222":
+            st.session_state.logged_in, st.session_state.role = True, "Admin"
+            st.rerun()
+        elif role == "Salesman" and pwd == "111":
+            st.session_state.logged_in, st.session_state.role = True, "Salesman"
+            st.rerun()
+        else: st.error("Incorrect Password")
 
-# --- AUTHENTICATED DASHBOARD ---
+# --- DASHBOARD ---
 else:
     st.sidebar.title(f"User: {st.session_state.role}")
     if st.sidebar.button("Logout"):
@@ -46,52 +35,48 @@ else:
         st.rerun()
 
     if st.session_state.role == "Admin":
-        st.title("👨‍💼 Administrator Control Panel")
+        st.title("👨‍💼 Administrator Control Center")
         
-        tab1, tab2, tab3 = st.tabs(["📊 Reports & Map", "📦 Inventory Management", "👥 Attendance"])
+        t1, t2, t3 = st.tabs(["Dashboard & Map", "Inventory Control", "Sales Ledger"])
         
-        with tab1:
-            m1, m2 = st.columns(2)
-            m1.metric("Live Daily Sales", f"Rs. {sum(d['Amount'] for d in st.session_state.sales_record)}")
-            m2.metric("Total Recovery", f"Rs. {sum(d['Recovery'] for d in st.session_state.sales_record)}")
+        with t1:
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Total Credit Sales", f"Rs. {sum(d['Credit'] for d in st.session_state.sales_ledger)}")
+            m2.metric("Total Recovery (Cash)", f"Rs. {sum(d['Recovery'] for d in st.session_state.sales_ledger)}")
+            m3.metric("Live Staff", "1")
             
-            st.subheader("🌍 Kotli Market Tracking")
+            st.subheader("🌍 Field Tracking - Kotli")
             m = folium.Map(location=[33.5158, 73.9018], zoom_start=14)
             folium_static(m)
-            
-            st.subheader("📝 Sales & Recovery Ledger")
-            st.table(pd.DataFrame(st.session_state.sales_record))
 
-        with tab2:
-            st.subheader("Add New Stock")
-            new_item = st.text_input("Item Name")
-            new_qty = st.number_input("Quantity", min_value=0)
-            if st.button("Add to Inventory"):
-                st.session_state.inventory_db.append({"Item": new_item, "Stock": new_qty})
-                st.success("Stock Updated!")
-            st.table(pd.DataFrame(st.session_state.inventory_db))
+        with t2:
+            st.subheader("Manage Stock")
+            item_name = st.text_input("Item Name")
+            item_qty = st.number_input("Add Quantity", min_value=0)
+            if st.button("Update Inventory"):
+                st.session_state.inventory[item_name] = st.session_state.inventory.get(item_name, 0) + item_qty
+                st.success("Stock Added!")
+            st.write("Current Stock:", st.session_state.inventory)
+
+        with t3:
+            st.subheader("Daily Sales & Recovery Report")
+            if st.session_state.sales_ledger:
+                st.table(pd.DataFrame(st.session_state.sales_ledger))
 
     elif st.session_state.role == "Salesman":
         st.title("📱 Field Sales App")
         
-        tab_a, tab_b = st.tabs(["📍 Attendance", "📝 Entry & Recovery"])
-        
-        with tab_a:
-            if st.button("Mark Attendance"):
-                st.session_state.attendance_log.append({"Time": datetime.datetime.now()})
-                st.success("Attendance Marked!")
-        
-        with tab_b:
-            st.subheader("New Sale / Recovery Entry")
-            s_shop = st.text_input("Shop Name")
-            s_amt = st.number_input("Sale Amount (Credit)", min_value=0)
-            s_rec = st.number_input("Recovery Amount (Cash)", min_value=0)
+        with st.form("entry_form"):
+            st.subheader("New Entry (Sale + Recovery)")
+            shop = st.text_input("Shop Name")
+            credit_sale = st.number_input("New Credit Sale (Amount)", min_value=0)
+            cash_rec = st.number_input("Cash Recovery (Amount)", min_value=0)
+            submit = st.form_submit_button("Submit Entry to Admin")
             
-            if st.button("Submit Entry"):
-                if s_shop:
-                    st.session_state.sales_record.append({
-                        "Shop": s_shop, "Amount": s_amt, "Recovery": s_rec, 
+            if submit:
+                if shop:
+                    st.session_state.sales_ledger.append({
+                        "Shop": shop, "Credit": credit_sale, "Recovery": cash_rec, 
                         "Time": datetime.datetime.now().strftime("%I:%M %p")
                     })
-                    st.balloons()
-                    st.success("Data Sent to Admin!")
+                    st.success("Record Sent Successfully!")
